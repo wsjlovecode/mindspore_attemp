@@ -27,12 +27,12 @@ asm_function MatmulFloatNeon64Opt_24
     ldr x8, [sp]
     ldr x9, [sp, #8]
 
-    mov x21, #48 // sizeof(float) * 12
+    mov x21, #96 // sizeof(float) * 24
     mul x17, x5, x21 // block stride of lhs/rhs: sizeof(float) * 12 * depth
     cbnz x9, NoC8Steps
     mov x11, x2
-    mov x21, #32
-    mul x16, x6, x21 // row * 8 * sizeof(float)
+    mov x21, #16
+    mul x16, x6, x21 // row * 4 * sizeof(float)
 NoC8Steps:
     cmp x9, #2
     bne NoWinoSteps
