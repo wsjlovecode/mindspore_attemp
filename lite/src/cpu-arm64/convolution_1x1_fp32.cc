@@ -94,10 +94,11 @@ int Convolution1x1CPUKernel::InitConv1x1BiasWeight() {
   memset(reinterpret_cast<char *>(weight_ptr_) + down_size, 0, size - down_size);
 #ifdef ENABLE_AVX
   RowMajor2Col16Major(origin_weight_, weight_ptr_, output_channel, input_channel);
-#elif defined(ENABLE_ARM32)
-  RowMajor2Col4Major(origin_weight_, weight_ptr_, output_channel, input_channel);
+// #elif defined(ENABLE_ARM32)
+// RowMajor2Col4Major(origin_weight_, weight_ptr_, output_channel, input_channel);
 #else
-  RowMajor2Col8Major(origin_weight_, weight_ptr_, output_channel, input_channel);
+  // RowMajor2Col8Major(origin_weight_, weight_ptr_, output_channel, input_channel);
+  RowMajor2Col4Major(origin_weight_, weight_ptr_, output_channel, input_channel);
 #endif
   return RET_OK;
 }
@@ -146,8 +147,10 @@ int Convolution1x1CPUKernel::Init() {
   row_tile_ = C12NUM;
   col_tile_ = C4NUM;
 #else
-  row_tile_ = C12NUM;
-  col_tile_ = C8NUM;
+  // row_tile_ = C12NUM;
+  // col_tile_ = C8NUM;
+  row_tile_ = 24
+  col_tile_ = 4
 #endif
   matmul_param_ = new (std::nothrow) MatMulParameter;
   if (matmul_param_ == nullptr) {
