@@ -219,7 +219,7 @@ LoopRow16:
     mov x12, x3 // reload bias
 
     LoopCol16:
-        cbz x9, NoReloadDst8
+        cbz x9, NoReloadDst16
         mov x11, x2
     NoReloadDst16:
         mov x10, x0 // reload lhs ptr
