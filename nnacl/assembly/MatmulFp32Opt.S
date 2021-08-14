@@ -29,18 +29,10 @@ asm_function MatmulFloatNeon64Opt_24
 
     mov x21, #96 // sizeof(float) * 24
     mul x17, x5, x21 // block stride of lhs/rhs: sizeof(float) * 12 * depth
-    cbnz x9, NoC8Steps
-    mov x11, x2
-    mov x21, #16
-    mul x16, x6, x21 // row * 4 * sizeof(float)
-NoC8Steps:
-    cmp x9, #2
-    bne NoWinoSteps
-    mov x21, #4
-    mul x15, x7, x8
-    mul x15, x15, x21 // kernel_size * col *sizeof(float)
-    mov x21, #32
-    mul x16, x8, x21 // kernel_size * 8 * sizeof(float)
+    // cbnz x9, NoC8Steps
+    // mov x11, x2
+    // mov x21, #16
+    // mul x16, x6, x21 // row * 4 * sizeof(float)
 NoWinoSteps:
     mov x21, #4
     mul x8, x8, x21
@@ -546,27 +538,27 @@ LoopRow4:
             cmp x6, #1
             beq WriteEnd
             add x11, x11, x8
-            str s9, [x11]
+            str s10, [x11]
             cmp x6, #2
             beq WriteEnd
             add x11, x11, x8
-            str s10, [x11]
+            str s12, [x11]
             cmp x6, #3
             beq WriteEnd
             add x11, x11, x8
-            str s11, [x11]
+            str s14, [x11]
             cmp x6, #4
             beq WriteEnd
             add x11, x11, x8
-            str s12, [x11]
+            str s9, [x11]
             cmp x6, #5
             beq WriteEnd
             add x11, x11, x8
-            str s13, [x11]
+            str s11, [x11]
             cmp x6, #6
             beq WriteEnd
             add x11, x11, x8
-            str s14, [x11]
+            str s13, [x11]
             cmp x6, #7
             beq WriteEnd
             add x11, x11, x8
@@ -578,27 +570,27 @@ LoopRow4:
             cmp x6, #9
             beq WriteEnd
             add x11, x11, x8
-            str s17, [x11]
+            str s18, [x11]
             cmp x6, #10
             beq WriteEnd
             add x11, x11, x8
-            str s18, [x11]
+            str s20, [x11]
             cmp x6, #11
             beq WriteEnd
             add x11, x11, x8
-            str s19, [x11]
+            str s22, [x11]
             cmp x6, #12
             beq WriteEnd
             add x11, x11, x8
-            str s20, [x11]
+            str s17, [x11]
             cmp x6, #13
             beq WriteEnd
             add x11, x11, x8
-            str s21, [x11]
+            str s19, [x11]
             cmp x6, #14
             beq WriteEnd
             add x11, x11, x8
-            str s22, [x11]
+            str s21, [x11]
             cmp x6, #15
             beq WriteEnd
             add x11, x11, x8
@@ -610,27 +602,27 @@ LoopRow4:
             cmp x6, #17
             beq WriteEnd
             add x11, x11, x8
-            str s25, [x11]
+            str s26, [x11]
             cmp x6, #18
             beq WriteEnd
             add x11, x11, x8
-            str S26, [x11]
+            str s28, [x11]
             cmp x6, #19
             beq WriteEnd
             add x11, x11, x8
-            str s27, [x11]
+            str s30, [x11]
             cmp x6, #20
             beq WriteEnd
             add x11, x11, x8
-            str s28, [x11]
+            str s25, [x11]
             cmp x6, #21
             beq WriteEnd
             add x11, x11, x8
-            str s29, [x11]
+            str s27, [x11]
             cmp x6, #22
             beq WriteEnd
             add x11, x11, x8
-            str s30, [x11]
+            str s29, [x11]
             cmp x6, #23
             beq WriteEnd
             add x11, x11, x8
@@ -643,22 +635,22 @@ LoopRow4:
             st1 {v8.2s}, [x11], x8
             cmp x6, #1
             beq WriteEnd
-            st1 {v9.2s}, [x11], x8
+            st1 {v10.2s}, [x11], x8
             cmp x6, #2
             beq WriteEnd
-            st1 {v10.2s}, [x11], x8
+            st1 {v12.2s}, [x11], x8
             cmp x6, #3
             beq WriteEnd
-            st1 {v11.2s}, [x11], x8
+            st1 {v14.2s}, [x11], x8
             cmp x6, #4
             beq WriteEnd
-            st1 {v12.2s}, [x11], x8
+            st1 {v9.2s}, [x11], x8
             cmp x6, #5
             beq WriteEnd
-            st1 {v13.2s}, [x11], x8
+            st1 {v11.2s}, [x11], x8
             cmp x6, #6
             beq WriteEnd
-            st1 {v14.2s}, [x11], x8
+            st1 {v13.2s}, [x11], x8
             cmp x6, #7
             beq WriteEnd
             st1 {v15.2s}, [x11], x8
@@ -667,22 +659,22 @@ LoopRow4:
             st1 {v16.2s}, [x11], x8
             cmp x6, #9
             beq WriteEnd
-            st1 {v17.2s}, [x11], x8
+            st1 {v18.2s}, [x11], x8
             cmp x6, #10
             beq WriteEnd
-            st1 {v18.2s}, [x11], x8
+            st1 {v20.2s}, [x11], x8
             cmp x6, #11
             beq WriteEnd
-            st1 {v19.2s}, [x11], x8
+            st1 {v22.2s}, [x11], x8
             cmp x6, #12
             beq WriteEnd
-            st1 {v20.2s}, [x11], x8
+            st1 {v17.2s}, [x11], x8
             cmp x6, #13
             beq WriteEnd
-            st1 {v21.2s}, [x11], x8
+            st1 {v19.2s}, [x11], x8
             cmp x6, #14
             beq WriteEnd
-            st1 {v22.2s}, [x11], x8
+            st1 {v21.2s}, [x11], x8
             cmp x6, #15
             beq WriteEnd
             st1 {v23.2s}, [x11], x8
@@ -691,22 +683,22 @@ LoopRow4:
             st1 {v24.2s}, [x11], x8
             cmp x6, #17
             beq WriteEnd
-            st1 {v25.2s}, [x11], x8
+            st1 {v26.2s}, [x11], x8
             cmp x6, #18
             beq WriteEnd
-            st1 {v26.2s}, [x11], x8
-            cmp x6, #19
-            beq WriteEnd
-            st1 {v27.2s}, [x11], x8
-            cmp x6, #19
-            beq WriteEnd
             st1 {v28.2s}, [x11], x8
-            cmp x6, #20
-            beq WriteEnd
-            st1 {v29.2s}, [x11], x8
-            cmp x6, #21
+            cmp x6, #19
             beq WriteEnd
             st1 {v30.2s}, [x11], x8
+            cmp x6, #19
+            beq WriteEnd
+            st1 {v25.2s}, [x11], x8
+            cmp x6, #20
+            beq WriteEnd
+            st1 {v27.2s}, [x11], x8
+            cmp x6, #21
+            beq WriteEnd
+            st1 {v29.2s}, [x11], x8
             cmp x6, #22
             beq WriteEnd
             st1 {v31.2s}, [x11], x8
@@ -719,28 +711,28 @@ LoopRow4:
             st1 {v8.s}[2], [x19], x8
             cmp x6, #1
             beq WriteEnd
-            st1 {v9.2s}, [x11], x8
-            st1 {v9.s}[2], [x19], x8
-            cmp x6, #2
-            beq WriteEnd
             st1 {v10.2s}, [x11], x8
             st1 {v10.s}[2], [x19], x8
-            cmp x6, #3
-            beq WriteEnd
-            st1 {v11.2s}, [x11], x8
-            st1 {v11.s}[2], [x19], x8
-            cmp x6, #4
+            cmp x6, #2
             beq WriteEnd
             st1 {v12.2s}, [x11], x8
             st1 {v12.s}[2], [x19], x8
-            cmp x6, #5
-            beq WriteEnd
-            st1 {v13.2s}, [x11], x8
-            st1 {v13.s}[2], [x19], x8
-            cmp x6, #6
+            cmp x6, #3
             beq WriteEnd
             st1 {v14.2s}, [x11], x8
             st1 {v14.s}[2], [x19], x8
+            cmp x6, #4
+            beq WriteEnd
+            st1 {v9.2s}, [x11], x8
+            st1 {v9.s}[2], [x19], x8
+            cmp x6, #5
+            beq WriteEnd
+            st1 {v11.2s}, [x11], x8
+            st1 {v11.s}[2], [x19], x8
+            cmp x6, #6
+            beq WriteEnd
+            st1 {v13.2s}, [x11], x8
+            st1 {v13.s}[2], [x19], x8
             cmp x6, #7
             beq WriteEnd
             st1 {v15.2s}, [x11], x8
@@ -751,28 +743,28 @@ LoopRow4:
             st1 {v16.s}[2], [x19], x8
             cmp x6, #9
             beq WriteEnd
-            st1 {v17.2s}, [x11], x8
-            st1 {v17.s}[2], [x19], x8
-            cmp x6, #10
-            beq WriteEnd
             st1 {v18.2s}, [x11], x8
             st1 {v18.s}[2], [x19], x8
-            cmp x6, #11
-            beq WriteEnd
-            st1 {v19.2s}, [x11], x8
-            st1 {v19.s}[2], [x19], x8
-            cmp x6, #12
+            cmp x6, #10
             beq WriteEnd
             st1 {v20.2s}, [x11], x8
             st1 {v20.s}[2], [x19], x8
-            cmp x6, #13
-            beq WriteEnd
-            st1 {v21.2s}, [x11], x8
-            st1 {v21.s}[2], [x19], x8
-            cmp x6, #14
+            cmp x6, #11
             beq WriteEnd
             st1 {v22.2s}, [x11], x8
             st1 {v22.s}[2], [x19], x8
+            cmp x6, #12
+            beq WriteEnd
+            st1 {v17.2s}, [x11], x8
+            st1 {v17.s}[2], [x19], x8
+            cmp x6, #13
+            beq WriteEnd
+            st1 {v19.2s}, [x11], x8
+            st1 {v19.s}[2], [x19], x8
+            cmp x6, #14
+            beq WriteEnd
+            st1 {v21.2s}, [x11], x8
+            st1 {v21.s}[2], [x19], x8
             cmp x6, #15
             beq WriteEnd
             st1 {v23.2s}, [x11], x8
@@ -783,28 +775,28 @@ LoopRow4:
             st1 {v24.s}[2], [x19], x8
             cmp x6, #17
             beq WriteEnd
-            st1 {v25.2s}, [x11], x8
-            st1 {v25.s}[2], [x19], x8
-            cmp x6, #18
-            beq WriteEnd
             st1 {v26.2s}, [x11], x8
             st1 {v26.s}[2], [x19], x8
-            cmp x6, #19
-            beq WriteEnd
-            st1 {v27.2s}, [x11], x8
-            st1 {v27.s}[2], [x19], x8
-            cmp x6, #20
+            cmp x6, #18
             beq WriteEnd
             st1 {v28.2s}, [x11], x8
             st1 {v28.s}[2], [x19], x8
-            cmp x6, #21
-            beq WriteEnd
-            st1 {v29.2s}, [x11], x8
-            st1 {v29.s}[2], [x19], x8
-            cmp x6, #22
+            cmp x6, #19
             beq WriteEnd
             st1 {v30.2s}, [x11], x8
             st1 {v30.s}[2], [x19], x8
+            cmp x6, #20
+            beq WriteEnd
+            st1 {v25.2s}, [x11], x8
+            st1 {v25.s}[2], [x19], x8
+            cmp x6, #21
+            beq WriteEnd
+            st1 {v27.2s}, [x11], x8
+            st1 {v27.s}[2], [x19], x8
+            cmp x6, #22
+            beq WriteEnd
+            st1 {v29.2s}, [x11], x8
+            st1 {v29.s}[2], [x19], x8
             cmp x6, #23
             beq WriteEnd
             st1 {v31.2s}, [x11], x8
@@ -816,22 +808,22 @@ LoopRow4:
             st1 {v8.4s}, [x11], x8
             cmp x6, #1
             beq WriteEnd
-            st1 {v9.4s}, [x11], x8
+            st1 {v10.4s}, [x11], x8
             cmp x6, #2
             beq WriteEnd
-            st1 {v10.4s}, [x11], x8
+            st1 {v12.4s}, [x11], x8
             cmp x6, #3
             beq WriteEnd
-            st1 {v11.4s}, [x11], x8
+            st1 {v14.4s}, [x11], x8
             cmp x6, #4
             beq WriteEnd
-            st1 {v12.4s}, [x11], x8
+            st1 {v9.4s}, [x11], x8
             cmp x6, #5
             beq WriteEnd
-            st1 {v13.4s}, [x11], x8
+            st1 {v11.4s}, [x11], x8
             cmp x6, #6
             beq WriteEnd
-            st1 {v14.4s}, [x11], x8
+            st1 {v13.4s}, [x11], x8
             cmp x6, #7
             beq WriteEnd
             st1 {v15.4s}, [x11], x8
@@ -840,22 +832,22 @@ LoopRow4:
             st1 {v16.4s}, [x11], x8
             cmp x6, #9
             beq WriteEnd
-            st1 {v17.4s}, [x11], x8
+            st1 {v18.4s}, [x11], x8
             cmp x6, #10
             beq WriteEnd
-            st1 {v18.4s}, [x11], x8
+            st1 {v20.4s}, [x11], x8
             cmp x6, #11
             beq WriteEnd
-            st1 {v19.4s}, [x11], x8
+            st1 {v22.4s}, [x11], x8
             cmp x6, #12
             beq WriteEnd
-            st1 {v20.4s}, [x11], x8
+            st1 {v17.4s}, [x11], x8
             cmp x6, #13
             beq WriteEnd
-            st1 {v21.4s}, [x11], x8
+            st1 {v19.4s}, [x11], x8
             cmp x6, #14
             beq WriteEnd
-            st1 {v22.4s}, [x11], x8
+            st1 {v21.4s}, [x11], x8
             cmp x6, #15
             beq WriteEnd
             st1 {v23.4s}, [x11], x8
@@ -864,22 +856,22 @@ LoopRow4:
             st1 {v24.4s}, [x11], x8
             cmp x6, #17
             beq WriteEnd
-            st1 {v25.4s}, [x11], x8
+            st1 {v26.4s}, [x11], x8
             cmp x6, #18
             beq WriteEnd
-            st1 {v26.4s}, [x11], x8
+            st1 {v28.4s}, [x11], x8
             cmp x6, #19
             beq WriteEnd
-            st1 {v27.4s}, [x11], x8
+            st1 {v30.4s}, [x11], x8
             cmp x6, #20
             beq WriteEnd
-            st1 {v28.4s}, [x11], x8
+            st1 {v25.4s}, [x11], x8
             cmp x6, #21
             beq WriteEnd
-            st1 {v29.4s}, [x11], x8
+            st1 {v27.4s}, [x11], x8
             cmp x6, #22
             beq WriteEnd
-            st1 {v30.4s}, [x11], x8
+            st1 {v29.4s}, [x11], x8
             cmp x6, #23
             st1 {v31.4s}, [x11], x8
             add x11, x11, #16
@@ -923,16 +915,10 @@ LoopRow4:
 
 LoopColEnd:
         add x0, x0, x17
-        cbz x9, C8DstStep
         mov x21, #4
         mul x21, x21, x7
         sub x11, x11, x21
         mov x2, x11
-        b NoDstStep
-    C8DstStep:
-        add x2, x2, #384
-        mov x11, x2
-    NoDstStep:
         subs x6, x6, #24
         bgt LoopRowStart
 

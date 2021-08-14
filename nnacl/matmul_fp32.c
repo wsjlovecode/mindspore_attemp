@@ -360,7 +360,7 @@ void RowMajor2Col12Major(const float *src_ptr, float *dst_ptr, int row, int col)
   return;
 }
 
-// #define C24NUM 24
+#define C24NUM 24
 void RowMajor2Col24Major(const float *src_ptr, float *dst_ptr, int row, int col) {
     const float *src_r = src_ptr;
     float *dst_r = dst_ptr;
@@ -1090,7 +1090,8 @@ void MatMulOpt(const float *a, const float *b, float *c, const float *bias, ActT
   if (out_type == OutType_C8) {
     MatmulFloatNeon64(a, b, c, bias, (int)act_type, deep, row, col, stride, 0, 0);
   } else {
-    MatmulFloatNeon64Opt(a, b, c, bias, (int)act_type, deep, row, col, stride, (int)(out_type));
+    // MatmulFloatNeon64Opt(a, b, c, bias, (int)act_type, deep, row, col, stride, (int)(out_type));
+    MatmulFloatNeon64Opt_24(a, b, c, bias, (int)act_type, deep, row, col, stride, (int)(out_type));
   }
 #elif ENABLE_ARM32
   if (out_type == OutType_C8) {
