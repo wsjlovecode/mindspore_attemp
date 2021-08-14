@@ -293,7 +293,7 @@ LoopRow16:
             fadd v22.4s, v22.4s, v0.4s
             fadd v23.4s, v23.4s, v0.4s
 
-         Activation:
+         Activation16:
             cmp x4, #3
             beq Relu616
             cmp x4, #1
