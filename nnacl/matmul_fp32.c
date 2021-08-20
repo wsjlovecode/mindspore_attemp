@@ -426,7 +426,7 @@ void RowMajor2Col24Major_arm64(const float* src_c, float* dst_c, size_t col) {
         "trn2 v31.2d, v14.2d, v15.2d\n"
 
         "st1 {v20.4s, v21.4s, v22.4s}, [x11], #48\n"
-	"st1 {v26.4s, v27.4s, v28.4s}, [x11], #48\n"
+	      "st1 {v26.4s, v27.4s, v28.4s}, [x11], #48\n"
         "st1 {v23.4s, v24.4s, v25.4s}, [x11], #48\n"
         "st1 {v29.4s, v30.4s, v31.4s}, [x11], #48\n"
 
@@ -449,15 +449,15 @@ void RowMajor2Col24Major(const float *src_ptr, float *dst_ptr, int row, int col)
             const float *src_c = src_r + ci;
             float* dst_c = dst_r + ci * C24NUM;
 
-// #ifdef ENABLE_ARM64
-// 	    RowMajor2Col24Major_arm64(src_c, dst_c, col);
-// #else
+ #ifdef ENABLE_ARM64
+ 	    RowMajor2Col24Major_arm64(src_c, dst_c, col);
+ #else
             for (int tr = 0; tr < C24NUM; tr++) {
                 for (int tc = 0; tc < 2; tc++) {
                     dst_c[tc * C24NUM + tr] = src_c[tr * col + tc];
                 }
             }
-// #endif
+ #endif
         }
         for (; ci < col; ci++) {
             const float* src_c = src_r + ci;
