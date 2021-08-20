@@ -51,8 +51,8 @@ void RowMajor2Col4Major(const float *src_ptr, float *dst_ptr, int row, int col);
 void RowMajor2Col6Major(const float *src_ptr, float *dst_ptr, int row, int col);
 void RowMajor2Col8Major(const float *src_ptr, float *dst_ptr, int row, int col);
 void RowMajor2Col12Major(const float *src_ptr, float *dst_ptr, int row, int col);
-void RowMajor2Col16Major(const float *src_ptr, float *dst_ptr, int row, int col);
 void RowMajor2Col24Major(const float *src_ptr, float *dst_ptr, int row, int col);
+void RowMajor2Col16Major(const float *src_ptr, float *dst_ptr, int row, int col);
 void RowMajor2Col32Major(const float *src_ptr, float *dst_ptr, int row, int col);
 
 #ifdef ENABLE_ARM64
@@ -108,7 +108,8 @@ void MatVecMulRowxColKernel(float *dst, const float *src, const float *weight, c
 #endif
 void MatMul12x8(const float *a, const float *b, float *dst, const float *bias, ActType act_type, int deep, int row,
                 int col, int stride, int out_type);
-
+void MatMul24x4(const float *a, const float *b, float *dst, const float *bias, ActType act_type, int deep, int row,
+ 		int col, int stride, int out_type);
 #ifdef __cplusplus
 }
 #endif

@@ -28,7 +28,7 @@ asm_function MatmulFloatNeon64Opt_24
     ldr x9, [sp, #8]
 
     mov x21, #96 // sizeof(float) * 24
-    mul x17, x5, x21 // block stride of lhs/rhs: sizeof(float) * 12 * depth
+    mul x17, x5, x21 // block stride of lhs/rhs: sizeof(float) * 24 * depth
     // cbnz x9, NoC8Steps
     // mov x11, x2
     // mov x21, #16
@@ -41,9 +41,9 @@ LoopRowStart:
     cmp x6, #4
     ble LoopRow4
     cmp x6, #8
-    blt LoopRow8
+    ble LoopRow8
     cmp x6, #16
-    blt LoopRow16
+    ble LoopRow16
         
 LoopRow:                          // new added
     mov x14, x1 // reload rhs ptr
@@ -354,13 +354,11 @@ LoopRow8:
         mov x10, x0 // reload lhs ptr
         mov x19, x5 // reload depth
 
-        cmp x13, #4
-        ble LoopDepthStartHalf8
 
     LoopDepthStart8:
         ld1 {v0.4s, v1.4s, v2.4s}, [x10], #48
         ld1 {v3.4s, v4.4s, v5.4s}, [x10], #48
-        ld1 {v6.4s}, [x14], #32
+        ld1 {v6.4s}, [x14], #16
         fmul v8.4s, v6.4s, v0.s[0]
         fmul v10.4s, v6.4s, v0.s[1]
         fmul v12.4s, v6.4s, v0.s[2]
@@ -376,7 +374,7 @@ LoopRow8:
         LoopDepth8:
             ld1 {v0.4s, v1.4s, v2.4s}, [x10], #48
             ld1 {v3.4s, v4.4s, v5.4s}, [x10], #48
-            ld1 {v6.4s}, [x14], #32
+            ld1 {v6.4s}, [x14], #16
             fmla v8.4s, v6.4s, v0.s[0]
             fmla v10.4s, v6.4s, v0.s[1]
             fmla v12.4s, v6.4s, v0.s[2]
@@ -447,13 +445,11 @@ LoopRow4:
         mov x10, x0 // reload lhs ptr
         mov x19, x5 // reload depth
 
-        cmp x13, #4
-        ble LoopDepthStartHalf4
 
     LoopDepthStart4:
         ld1 {v0.4s, v1.4s, v2.4s}, [x10], #48
         ld1 {v3.4s, v4.4s, v5.4s}, [x10], #48
-        ld1 {v6.4s}, [x14], #32
+        ld1 {v6.4s}, [x14], #16
         fmul v8.4s, v6.4s, v0.s[0]
         fmul v10.4s, v6.4s, v0.s[1]
         fmul v12.4s, v6.4s, v0.s[2]
@@ -465,7 +461,7 @@ LoopRow4:
         LoopDepth4:
             ld1 {v0.4s, v1.4s, v2.4s}, [x10], #48
             ld1 {v3.4s, v4.4s, v5.4s}, [x10], #48
-            ld1 {v6.4s}, [x14], #32
+            ld1 {v6.4s}, [x14], #16
             fmla v8.4s, v6.4s, v0.s[0]
             fmla v10.4s, v6.4s, v0.s[1]
             fmla v12.4s, v6.4s, v0.s[2]
@@ -477,15 +473,10 @@ LoopRow4:
         Bias4:
             cbz x3, Activation4
             ld1 {v0.4s}, [x12], #16
-            ld1 {v1.4s}, [x12], #16
             fadd v8.4s, v8.4s, v0.4s
-            fadd v9.4s, v9.4s, v1.4s
             fadd v10.4s, v10.4s, v0.4s
-            fadd v11.4s, v11.4s, v1.4s
             fadd v12.4s, v12.4s, v0.4s
-            fadd v13.4s, v13.4s, v1.4s
             fadd v14.4s, v14.4s, v0.4s
-            fadd v15.4s, v15.4s, v1.4s
 
         Activation4:
             cmp x4, #3
@@ -499,24 +490,16 @@ LoopRow4:
             dup v2.4s, w19
             scvtf v2.4s, v2.4s
             fmin v8.4s, v8.4s, v2.4s
-            fmin v9.4s, v9.4s, v2.4s
             fmin v10.4s, v10.4s, v2.4s
-            fmin v11.4s, v11.4s, v2.4s
             fmin v12.4s, v12.4s, v2.4s
-            fmin v13.4s, v13.4s, v2.4s
             fmin v14.4s, v14.4s, v2.4s
-            fmin v15.4s, v15.4s, v2.4s
         
         Relu4:
             dup v3.4s, wzr
             fmax v8.4s, v8.4s, v3.4s
-            fmax v9.4s, v9.4s, v3.4s
             fmax v10.4s, v10.4s, v3.4s
-            fmax v11.4s, v11.4s, v3.4s
             fmax v12.4s, v12.4s, v3.4s
-            fmax v13.4s, v13.4s, v3.4s
             fmax v14.4s, v14.4s, v3.4s
-            fmax v15.4s, v15.4s, v3.4s
             b Write
 
 
@@ -873,34 +856,10 @@ LoopRow4:
             beq WriteEnd
             st1 {v29.4s}, [x11], x8
             cmp x6, #23
+            beq WriteEnd
             st1 {v31.4s}, [x11], x8
             add x11, x11, #16
             b WriteEnd
-        /* WriteC8:
-            mov x19, x11
-            st1 {v8.4s, v9.4s, v10.4s, v11.4s}, [x19], #64
-            st1 {v12.4s, v13.4s, v14.4s, v15.4s}, [x19], #64
-            st1 {v16.4s, v17.4s, v18.4s, v19.4s}, [x19], #64
-            st1 {v20.4s, v21.4s, v22.4s, v23.4s}, [x19], #64
-            st1 {v24.4s, v25.4s, v26.4s, v27.4s}, [x19], #64
-            st1 {v28.4s, v29.4s, v30.4s, v31.4s}, [x19], #64
-            add x11, x11, x16
-            b WriteEnd
-        WriteWino:
-            add x2, x11, x16
-            st1 {v8.4s, v9.4s}, [x11], x15
-            st1 {v10.4s, v11.4s}, [x11], x15
-            st1 {v12.4s, v13.4s}, [x11], x15
-            st1 {v14.4s, v15.4s}, [x11], x15
-            st1 {v16.4s, v17.4s}, [x11], x15
-            st1 {v18.4s, v19.4s}, [x11], x15
-            st1 {v20.4s, v21.4s}, [x11], x15
-            st1 {v22.4s, v23.4s}, [x11], x15
-            st1 {v24.4s, v25.4s}, [x11], x15
-            st1 {v26.4s, v27.4s}, [x11], x15
-            st1 {v28.4s, v29.4s}, [x11], x15
-            st1 {v30.4s, v31.4s}, [x11], x15
-            b WriteEnd */
 
         WriteEnd:
             subs x13, x13, #4 // rhs col - 4

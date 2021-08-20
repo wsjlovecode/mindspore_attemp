@@ -263,9 +263,9 @@ void RowMajor2Col12Major_arm32(const float *src_c, float *dst_c, size_t col) {
 void RowMajor2Col12Major(const float *src_ptr, float *dst_ptr, int row, int col) {
   const float *src_r = src_ptr;
   float *dst_r = dst_ptr;
-  size_t ri = 0;
+  int ri = 0;
   for (; ri < (row / C12NUM * C12NUM); ri += C12NUM) {
-    size_t ci = 0;
+    int ci = 0;
     for (; ci < (col / C4NUM * C4NUM); ci += C4NUM) {
       const float *src_c = src_r + ci;
       float *dst_c = dst_r + ci * C12NUM;
@@ -340,7 +340,7 @@ void RowMajor2Col12Major(const float *src_ptr, float *dst_ptr, int row, int col)
     for (; ci < col; ci++) {
       const float *src_c = src_r + ci;
       float *dst_c = dst_r + ci * C12NUM;
-      for (size_t i = 0; i < C12NUM; i++) {
+      for (int i = 0; i < C12NUM; i++) {
         dst_c[i] = src_c[i * col];
       }
     }
@@ -348,39 +348,121 @@ void RowMajor2Col12Major(const float *src_ptr, float *dst_ptr, int row, int col)
     dst_r += C12NUM * col;
   }
   for (; ri < row; ri++, dst_r++, src_r += col) {
-    for (size_t i = 0; i < col; i++) {
+    for (int i = 0; i < col; i++) {
       dst_r[i * C12NUM] = src_r[i];
     }
   }
   for (; ri < UP_ROUND(row, C12NUM); ri++, dst_r++) {
-    for (size_t i = 0; i < col; i++) {
+    for (int i = 0; i < col; i++) {
       dst_r[i * C12NUM] = 0;
     }
   }
-  return;
+}
+
+void RowMajor2Col24Major_arm64(const float* src_c, float* dst_c, size_t col) {
+    size_t stride = col * sizeof(float);
+    asm volatile(
+        "mov x10, %[src_c]\n"
+        "mov x11, %[dst_c]\n"
+
+        "ld1 {v0.4s}, [x10], %[stride]\n"
+        "ld1 {v1.4s}, [x10], %[stride]\n"
+        "ld1 {v2.4s}, [x10], %[stride]\n"
+        "ld1 {v3.4s}, [x10], %[stride]\n"
+
+        "ld1 {v4.4s}, [x10], %[stride]\n"
+        "ld1 {v5.4s}, [x10], %[stride]\n"
+        "ld1 {v6.4s}, [x10], %[stride]\n"
+        "ld1 {v7.4s}, [x10], %[stride]\n"
+
+        "zip1 v12.4s, v0.4s, v1.4s\n"
+        "zip1 v13.4s, v2.4s, v3.4s\n"
+        "zip1 v14.4s, v4.4s, v5.4s\n"
+        "zip1 v15.4s, v6.4s, v7.4s\n"
+
+        "ld1 {v8.4s}, [x10], %[stride]\n"
+        "ld1 {v9.4s}, [x10], %[stride]\n"
+        "ld1 {v10.4s}, [x10], %[stride]\n"
+        "ld1 {v11.4s}, [x10], %[stride]\n"
+
+        "ld1 {v0.4s}, [x10], %[stride]\n"
+        "ld1 {v1.4s}, [x10], %[stride]\n"
+        "ld1 {v2.4s}, [x10], %[stride]\n"
+        "ld1 {v3.4s}, [x10], %[stride]\n"
+
+        "trn1 v20.2d, v12.2d, v13.2d\n"
+        "trn2 v23.2d, v12.2d, v13.2d\n"
+        "trn1 v21.2d, v14.2d, v15.2d\n"
+        "trn2 v24.2d, v14.2d, v15.2d\n"
+
+        "zip1 v16.4s, v8.4s, v9.4s\n"
+        "zip1 v17.4s, v10.4s, v11.4s\n"
+        "zip1 v18.4s, v0.4s, v1.4s\n"
+        "zip1 v19.4s, v2.4s, v3.4s\n"
+
+        "ld1 {v4.4s}, [x10], %[stride]\n"
+        "ld1 {v5.4s}, [x10], %[stride]\n"
+        "ld1 {v6.4s}, [x10], %[stride]\n"
+        "ld1 {v7.4s}, [x10], %[stride]\n"
+
+        "ld1 {v8.4s}, [x10], %[stride]\n"
+        "ld1 {v9.4s}, [x10], %[stride]\n"
+        "ld1 {v10.4s}, [x10], %[stride]\n"
+        "ld1 {v11.4s}, [x10], %[stride]\n"
+
+        "trn1 v22.2d, v16.2d, v17.2d\n"
+        "trn2 v25.2d, v16.2d, v17.2d\n"
+        "trn1 v26.2d, v18.2d, v19.2d\n"
+        "trn2 v29.2d, v18.2d, v19.2d\n"
+
+        "zip1 v12.4s, v4.4s, v5.4s\n"
+        "zip1 v13.4s, v6.4s, v7.4s\n"
+        "zip1 v14.4s, v8.4s, v9.4s\n"
+        "zip1 v15.4s, v10.4s, v11.4s\n"
+
+        "trn1 v27.2d, v12.2d, v13.2d\n"
+        "trn2 v30.2d, v12.2d, v13.2d\n"
+        "trn1 v28.2d, v14.2d, v15.2d\n"
+        "trn2 v31.2d, v14.2d, v15.2d\n"
+
+        "st1 {v20.4s, v21.4s, v22.4s}, [x11], #48\n"
+	"st1 {v26.4s, v27.4s, v28.4s}, [x11], #48\n"
+        "st1 {v23.4s, v24.4s, v25.4s}, [x11], #48\n"
+        "st1 {v29.4s, v30.4s, v31.4s}, [x11], #48\n"
+
+        :
+        : [dst_c] "r"(dst_c), [src_c] "r"(src_c), [stride] "r"(stride)
+        : "x10", "x11", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14",
+          "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29", "v30",
+          "v31");
+    return;
 }
 
 #define C24NUM 24
 void RowMajor2Col24Major(const float *src_ptr, float *dst_ptr, int row, int col) {
-    const float *src_r = src_ptr;
-    float *dst_r = dst_ptr;
-    size_t ri = 0;
-    for (; ri < (row / C24NUM * C24NUM); ri += C24NUM) {
-        size_t ci = 0;
-        for (; ci < (col / C4NUM * C4NUM); ci += C4NUM) {
-            const float* src_c = src_r + ci;
-            float* dst_c = dst_r + C24NUM * ci;
+    const float* src_r = src_ptr;
+    float* dst_r = dst_ptr;
+    int ri = 0;
+    for (; ri < (row / C24NUM * C24NUM); ri += C24NUM){
+        int ci = 0;
+        for (; ci < (col / 2 * 2); ci += 2){
+            const float *src_c = src_r + ci;
+            float* dst_c = dst_r + ci * C24NUM;
 
+// #ifdef ENABLE_ARM64
+// 	    RowMajor2Col24Major_arm64(src_c, dst_c, col);
+// #else
             for (int tr = 0; tr < C24NUM; tr++) {
-                for (int tc = 0; tc < C4NUM; tc++) {
+                for (int tc = 0; tc < 2; tc++) {
                     dst_c[tc * C24NUM + tr] = src_c[tr * col + tc];
                 }
             }
+// #endif
         }
         for (; ci < col; ci++) {
-            const float *src_c = src_r + ci;
+            const float* src_c = src_r + ci;
             float* dst_c = dst_r + ci * C24NUM;
-            for (size_t i = 0; i < C24NUM; i++) {
+            for (int i = 0; i < C24NUM; i++) {
                 dst_c[i] = src_c[i * col];
             }
         }
@@ -388,12 +470,12 @@ void RowMajor2Col24Major(const float *src_ptr, float *dst_ptr, int row, int col)
         dst_r += C24NUM * col;
     }
     for (; ri < row; ri++, dst_r++, src_r += col) {
-        for (size_t i = 0; i < col; i++) {
+        for (int i = 0; i < col; i++) {
             dst_r[i * C24NUM] = src_r[i];
         }
     }
     for (; ri < UP_ROUND(row, C24NUM); ri++, dst_r++) {
-        for (size_t i = 0; i < col; i++) {
+        for (int i = 0; i < col; i++) {
             dst_r[i * C24NUM] = 0;
         }
     }
@@ -572,20 +654,20 @@ void RowMajor2Col8Major_arm32(const float *src_c, float *dst_c, size_t col) {
 #endif
 #endif
 void RowMajor2Col8Major(const float *src_ptr, float *dst_ptr, int row, int col) {
-  size_t row8 = row / C8NUM * C8NUM;
+  int row8 = row / C8NUM * C8NUM;
 #ifdef ENABLE_ARM64
-  size_t col_skip = col / C8NUM * C8NUM;
+  int col_skip = col / C8NUM * C8NUM;
   int skip_size = C8NUM;
 #else
-  size_t col_skip = col / C4NUM * C4NUM;
+  int col_skip = col / C4NUM * C4NUM;
   int skip_size = C4NUM;
 #endif
   const float *src_r = src_ptr;
   float *dst_r = dst_ptr;
 
-  size_t ri = 0;
+  int ri = 0;
   for (; ri < row8; ri += C8NUM) {
-    size_t ci = 0;
+    int ci = 0;
     for (; ci < col_skip; ci += skip_size) {
       const float *src_c = src_r + ci;
       float *dst_c = dst_r + ci * C8NUM;
@@ -633,7 +715,7 @@ void RowMajor2Col8Major(const float *src_ptr, float *dst_ptr, int row, int col) 
     for (; ci < col; ci++) {
       const float *src_c = src_r + ci;
       float *dst_c = dst_r + ci * C8NUM;
-      for (size_t i = 0; i < C8NUM; i++) {
+      for (int i = 0; i < C8NUM; i++) {
         dst_c[i] = src_c[i * col];
       }
     }
@@ -641,29 +723,28 @@ void RowMajor2Col8Major(const float *src_ptr, float *dst_ptr, int row, int col) 
     dst_r += C8NUM * col;
   }
   for (; ri < row; ri++, src_r += col, dst_r++) {
-    for (size_t i = 0; i < col; i++) {
+    for (int i = 0; i < col; i++) {
       dst_r[i * C8NUM] = src_r[i];
     }
   }
 
   for (; ri < UP_ROUND(row, C8NUM); ri++, dst_r++) {
-    for (size_t i = 0; i < col; i++) {
+    for (int i = 0; i < col; i++) {
       dst_r[i * C8NUM] = 0;
     }
   }
-  return;
 }
 
 void RowMajor2Col16Major(const float *src_ptr, float *dst_ptr, int row, int col) {
-  size_t row16 = row / C16NUM * C16NUM;
-  size_t col_skip = col / C4NUM * C4NUM;
+  int row16 = row / C16NUM * C16NUM;
+  int col_skip = col / C4NUM * C4NUM;
   int skip_size = C4NUM;
   const float *src_r = src_ptr;
   float *dst_r = dst_ptr;
 
-  size_t ri = 0;
+  int ri = 0;
   for (; ri < row16; ri += C16NUM) {
-    size_t ci = 0;
+    int ci = 0;
     for (; ci < col_skip; ci += skip_size) {
       const float *src_c = src_r + ci;
       float *dst_c = dst_r + ci * C16NUM;
@@ -676,7 +757,7 @@ void RowMajor2Col16Major(const float *src_ptr, float *dst_ptr, int row, int col)
     for (; ci < col; ci++) {
       const float *src_c = src_r + ci;
       float *dst_c = dst_r + ci * C16NUM;
-      for (size_t i = 0; i < C16NUM; i++) {
+      for (int i = 0; i < C16NUM; i++) {
         dst_c[i] = src_c[i * col];
       }
     }
@@ -684,21 +765,20 @@ void RowMajor2Col16Major(const float *src_ptr, float *dst_ptr, int row, int col)
     dst_r += C16NUM * col;
   }
   for (; ri < row; ri++) {
-    for (size_t i = 0; i < col; i++) {
+    for (int i = 0; i < col; i++) {
       dst_r[i * C16NUM] = src_r[i];
     }
     src_r += col;
     dst_r += 1;
   }
 
-  size_t total_row = UP_ROUND(row, C16NUM);
+  int total_row = UP_ROUND(row, C16NUM);
   for (; ri < total_row; ri++) {
-    for (size_t i = 0; i < col; i++) {
+    for (int i = 0; i < col; i++) {
       dst_r[i * C16NUM] = 0;
     }
     dst_r += 1;
   }
-  return;
 }
 
 void RowMajor2Col32Major(const float *src_ptr, float *dst_ptr, int row, int col) {
@@ -720,15 +800,15 @@ void RowMajor2Col32Major(const float *src_ptr, float *dst_ptr, int row, int col)
 }
 
 void RowMajor2Col6Major(const float *src_ptr, float *dst_ptr, int row, int col) {
-  size_t totalRow = UP_ROUND(row, C6NUM);
-  size_t row6 = row / C6NUM * C6NUM;
-  size_t col8 = col / C8NUM * C8NUM;
+  int totalRow = UP_ROUND(row, C6NUM);
+  int row6 = row / C6NUM * C6NUM;
+  int col8 = col / C8NUM * C8NUM;
   const float *src_r = src_ptr;
   float *dst_r = dst_ptr;
 
-  size_t ri = 0;
+  int ri = 0;
   for (; ri < row6; ri += C6NUM) {
-    size_t ci = 0;
+    int ci = 0;
     for (; ci < col8; ci += C8NUM) {
       const float *src_c = src_r + ci;
       float *dst_c = dst_r + ci * C6NUM;
@@ -793,7 +873,7 @@ void RowMajor2Col6Major(const float *src_ptr, float *dst_ptr, int row, int col) 
     for (; ci < col; ci++) {
       const float *src_c = src_r + ci;
       float *dst_c = dst_r + ci * C6NUM;
-      for (size_t i = 0; i < C6NUM; i++) {
+      for (int i = 0; i < C6NUM; i++) {
         dst_c[i] = src_c[i * col];
       }
     }
@@ -802,7 +882,7 @@ void RowMajor2Col6Major(const float *src_ptr, float *dst_ptr, int row, int col) 
   }
 
   for (; ri < row; ri++) {
-    for (size_t i = 0; i < col; i++) {
+    for (int i = 0; i < col; i++) {
       dst_r[i * C6NUM] = src_r[i];
     }
     src_r += col;
@@ -810,30 +890,29 @@ void RowMajor2Col6Major(const float *src_ptr, float *dst_ptr, int row, int col) 
   }
 
   for (; ri < totalRow; ri++) {
-    for (size_t i = 0; i < col; i++) {
+    for (int i = 0; i < col; i++) {
       dst_r[i * C6NUM] = 0;
     }
     dst_r += 1;
   }
-  return;
 }
 
 void RowMajor2Col4Major(const float *src_ptr, float *dst_ptr, int row, int col) {
-  size_t total_row = UP_ROUND(row, C4NUM);
-  size_t row4 = row / C4NUM * C4NUM;
-  size_t col4 = col / C4NUM * C4NUM;
+  int total_row = UP_ROUND(row, C4NUM);
+  int row4 = row / C4NUM * C4NUM;
+  int col4 = col / C4NUM * C4NUM;
   const float *src_r = src_ptr;
   float *dst_r = dst_ptr;
 
-  size_t ri = 0;
+  int ri = 0;
   for (; ri < row4; ri += C4NUM) {
-    size_t ci = 0;
+    int ci = 0;
     for (; ci < col4; ci += C4NUM) {
       const float *src_c = src_r + ci;
       float *dst_c = dst_r + ci * C4NUM;
 
 #ifdef ENABLE_ARM32
-      size_t stride = col * 4;
+      int stride = col * 4;
       asm volatile(
         "mov r10, %[src_c]\n"
         "mov r12, %[dst_c]\n"
@@ -890,7 +969,7 @@ void RowMajor2Col4Major(const float *src_ptr, float *dst_ptr, int row, int col) 
     for (; ci < col; ci++) {
       const float *src_c = src_r + ci;
       float *dst_c = dst_r + ci * C4NUM;
-      for (size_t i = 0; i < C4NUM; i++) {
+      for (int i = 0; i < C4NUM; i++) {
         dst_c[i] = src_c[i * col];
       }
     }
@@ -898,7 +977,7 @@ void RowMajor2Col4Major(const float *src_ptr, float *dst_ptr, int row, int col) 
     dst_r += C4NUM * col;
   }
   for (; ri < row; ri++) {
-    for (size_t i = 0; i < col; i++) {
+    for (int i = 0; i < col; i++) {
       dst_r[i * C4NUM] = src_r[i];
     }
     src_r += col;
@@ -906,12 +985,11 @@ void RowMajor2Col4Major(const float *src_ptr, float *dst_ptr, int row, int col) 
   }
 
   for (; ri < total_row; ri++) {
-    for (size_t i = 0; i < col; i++) {
+    for (int i = 0; i < col; i++) {
       dst_r[i * C4NUM] = 0;
     }
     dst_r += 1;
   }
-  return;
 }
 
 #ifndef ENABLE_ARM
@@ -1084,6 +1162,27 @@ void MatMul12x8(const float *a, const float *b, float *dst, const float *bias, A
   }
 }
 
+void MatMul24x4(const float* a, const float* b, float* dst, const float* bias, ActType act_type, int deep, int row,
+                int col, int stride, int out_type) {
+    for(int r = 0; r < row; r++) {
+	for(int c = 0; c < col; c++) {
+	    int r24div = r / 24, r24mod = r % 24;
+	    int c4div = c / 4, c4mod = c % 4;
+	    size_t ci = r * stride + c;
+	    float value = 0.0;
+	    for(int d = 0; d < deep; d++) {
+		 size_t ai = r24div * deep * 24 + d * 24 + r24mod;
+		 size_t bi = c4div * deep * 4 + d * 4 + c4mod;
+		 value = value + a[ai] * b[bi];
+	    }
+	    ADD_BIAS(value, bias, c)
+	    DO_RELU(value, act_type)
+	    DO_RELU6(value, act_type)
+	    dst[ci] = value;
+	}
+    }
+}
+
 void MatMulOpt(const float *a, const float *b, float *c, const float *bias, ActType act_type, int deep, int row,
                int col, size_t stride, int out_type) {
 #ifdef ENABLE_ARM64
@@ -1092,7 +1191,10 @@ void MatMulOpt(const float *a, const float *b, float *c, const float *bias, ActT
   } else {
     // MatmulFloatNeon64Opt(a, b, c, bias, (int)act_type, deep, row, col, stride, (int)(out_type));
     MatmulFloatNeon64Opt_24(a, b, c, bias, (int)act_type, deep, row, col, stride, (int)(out_type));
+    // MatMul24x4(a, b, c, bias, act_type, deep, row, col, stride, out_type);
   }
+  // MatmulFloatNeon64Opt_24(a, b, c, bias, (int)act_type, deep, row, col, stride, (int)(out_type));
+  // MatMul24x4(a, b, c, bias, act_type, deep, row, col, stride, out_type);
 #elif ENABLE_ARM32
   if (out_type == OutType_C8) {
     MatmulFloatNeon32(a, b, c, bias, (int)act_type, deep, row, col, stride, 0, 0);

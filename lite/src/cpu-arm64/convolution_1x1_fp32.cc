@@ -70,7 +70,15 @@ void Convolution1x1CPUKernel::InitConv1x1MatmulParam() {
 int Convolution1x1CPUKernel::InitConv1x1BiasWeight() {
   auto filter_tensor = in_tensors_.at(kWeightIndex);
   auto input_channel = filter_tensor->Channel();
+  if (input_channel < 0) {
+    MS_LOG(ERROR) << "get channel failed from filter_tensor";
+    return RET_ERROR;
+  }
   auto output_channel = filter_tensor->Batch();
+  if (output_channel < 0) {
+    MS_LOG(ERROR) << "get batch failed from filter_tensor";
+    return RET_ERROR;
+  }
 
   if (in_tensors_.size() == 3) {
     int size = UP_ROUND(output_channel, col_tile_) * sizeof(float);
@@ -94,8 +102,8 @@ int Convolution1x1CPUKernel::InitConv1x1BiasWeight() {
   memset(reinterpret_cast<char *>(weight_ptr_) + down_size, 0, size - down_size);
 #ifdef ENABLE_AVX
   RowMajor2Col16Major(origin_weight_, weight_ptr_, output_channel, input_channel);
-// #elif defined(ENABLE_ARM32)
-// RowMajor2Col4Major(origin_weight_, weight_ptr_, output_channel, input_channel);
+#elif defined(ENABLE_ARM32)
+  RowMajor2Col4Major(origin_weight_, weight_ptr_, output_channel, input_channel);
 #else
   // RowMajor2Col8Major(origin_weight_, weight_ptr_, output_channel, input_channel);
   RowMajor2Col4Major(origin_weight_, weight_ptr_, output_channel, input_channel);
@@ -137,6 +145,8 @@ int Convolution1x1CPUKernel::InitConv1x1Param() {
 }
 
 int Convolution1x1CPUKernel::Init() {
+  CHECK_LESS_RETURN(in_tensors_.size(), C2NUM);
+  CHECK_LESS_RETURN(out_tensors_.size(), 1);
 #ifdef ENABLE_AVX
   row_tile_ = C6NUM;
   col_tile_ = C16NUM;
@@ -147,10 +157,8 @@ int Convolution1x1CPUKernel::Init() {
   row_tile_ = C12NUM;
   col_tile_ = C4NUM;
 #else
-  // row_tile_ = C12NUM;
-  // col_tile_ = C8NUM;
-  row_tile_ = 24
-  col_tile_ = 4
+  row_tile_ = 24;
+  col_tile_ = 4;
 #endif
   matmul_param_ = new (std::nothrow) MatMulParameter;
   if (matmul_param_ == nullptr) {
@@ -165,14 +173,14 @@ int Convolution1x1CPUKernel::Init() {
   return RET_OK;
 }
 
-void Convolution1x1CPUKernel::PackMatmulInput(const float *src_ptr, float *dst_ptr, int row, int col) {
+void Convolution1x1CPUKernel::PackMatmulInput(const float *src_ptr, float *dst_ptr, int row, int col) const {
 #ifdef ENABLE_AVX
   RowMajor2Col6Major(src_ptr, dst_ptr, row, col);
 #elif defined(ENABLE_SSE)
   RowMajor2Col4Major(src_ptr, dst_ptr, row, col);
 #else
   // RowMajor2Col12Major(src_ptr, dst_ptr, row, col);
-    RowMajor2Col24Major(src_ptr, dst_ptr, row, col);
+  RowMajor2Col24Major(src_ptr, dst_ptr, row, col);
 #endif
 }
 
@@ -277,7 +285,15 @@ int Convolution1x1CPUKernel::Run() {
 void Convolution1x1CPUKernel::PackWeight() {
   auto filter_tensor = in_tensors_.at(kWeightIndex);
   auto input_channel = filter_tensor->Channel();
+  if (input_channel < 0) {
+    MS_LOG(ERROR) << "get channel failed from filter_tensor.";
+    return;
+  }
   auto output_channel = filter_tensor->Batch();
+  if (input_channel < 0) {
+    MS_LOG(ERROR) << "get channel failed from filter_tensor.";
+    return;
+  }
 
   int size = input_channel * UP_ROUND(output_channel, col_tile_) * sizeof(float);
   int down_size = input_channel * DOWN_DIV(output_channel, col_tile_) * col_tile_ * sizeof(float);
@@ -285,11 +301,12 @@ void Convolution1x1CPUKernel::PackWeight() {
   MS_ASSERT(filter_tensor->data_c() != nullptr);
 #ifdef ENABLE_AVX
   RowMajor2Col16Major(reinterpret_cast<float *>(filter_tensor->data_c()), weight_ptr_, output_channel, input_channel);
-// #elif defined(ENABLE_ARM32)
-#else
+#elif defined(ENABLE_ARM32)
   RowMajor2Col4Major(reinterpret_cast<float *>(filter_tensor->data_c()), weight_ptr_, output_channel, input_channel);
-// #else
-  // RowMajor2Col8Major(reinterpret_cast<float *>(filter_tensor->data_c()), weight_ptr_, output_channel, input_channel);
+#else
+  /* RowMajor2Col8Major(reinterpret_cast<float *>(filter_tensor->data_c()), weight_ptr_, output_channel, input_channel); */
+  RowMajor2Col4Major(reinterpret_cast<float *>(filter_tensor->data_c()), weight_ptr_, output_channel, input_channel);
+
 #endif
 }
 
